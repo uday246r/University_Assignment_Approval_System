@@ -1,0 +1,98 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql" 
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------
+// ENUMS
+// -------------------------------
+enum Role {
+  STUDENT
+  PROFESSOR
+  HOD
+  ADMIN
+}
+
+enum AssignmentStatus {
+  DRAFT
+  SUBMITTED
+  UNDER_REVIEW
+  APPROVED_BY_PROFESSOR
+  APPROVED_BY_HOD
+  REJECTED
+  RESUBMIT
+}
+
+// -------------------------------
+// MODELS
+// -------------------------------
+model User {
+  id           String       @id @default(cuid())
+  email        String       @unique
+  name         String?
+  password     String
+  role         Role
+  departmentId String?
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  // Relations
+  assignments       Assignment[] @relation("StudentAssignments")     // student’s assignments
+  professorAssigned Assignment[] @relation("ProfessorAssignments")   // assignments professor reviews
+  hodApproved       Assignment[] @relation("HodAssignments")         // assignments HOD reviews
+  
+  @@index([email])
+  @@index([departmentId])
+}
+
+model Department {
+  id          String       @id @default(cuid())
+  name        String       @unique
+  code        String       @unique
+  program     String
+  description String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  users       User[]
+
+  @@index([code])
+}
+
+model Assignment {
+  id                String           @id @default(cuid())
+  title             String
+  description       String?
+  fileUrl           String?
+  status            AssignmentStatus @default(DRAFT)
+  category          String?
+
+  // Student relation (mandatory)
+  studentId         String
+  student           User @relation("StudentAssignments", fields: [studentId], references: [id], onDelete: Cascade)
+
+  // Professor relation (optional)
+  professorId       String?
+  professor         User? @relation("ProfessorAssignments", fields: [professorId], references: [id], onDelete: SetNull)
+
+  // HOD relation (optional)
+  hodId             String?
+  hod               User? @relation("HodAssignments", fields: [hodId], references: [id], onDelete: SetNull)
+
+  feedback          String?
+  submittedAt       DateTime?
+  reviewedAt        DateTime?
+  approvedAt        DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@index([studentId])
+  @@index([professorId])
+  @@index([hodId])
+  @@index([status])
+}
