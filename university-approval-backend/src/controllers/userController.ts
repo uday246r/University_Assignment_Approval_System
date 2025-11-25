@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import prisma from "../utils/prisma";
 import { Prisma,  Role, AssignmentStatus } from "@prisma/client";
 import bcrypt from "bcrypt";
-import "multer";
+import multer, {Multer} from "multer";
 import { Express } from "express";
 
 
@@ -200,12 +200,7 @@ export const studentDashboard = async(req: Request, res: Response) => {
 }
 
 
-interface MulterRequest extends Request {
-  file?: Express.Multer.File & { path?: string; };
-  files?: Express.Multer.File[];
-}
-
-export const uploadAssignment = async (req: MulterRequest, res: Response) => {
+export const uploadAssignment = async (req: Request, res: Response) => {
   try {
     
     if (!req.file || !req.file.path) {
@@ -246,7 +241,7 @@ export const uploadAssignment = async (req: MulterRequest, res: Response) => {
 };
 
 
-export const bulkUploadAssignment = async (req: MulterRequest, res: Response) => {
+export const bulkUploadAssignment = async (req: Request, res: Response) => {
   try {
     
     const files = req.files as Express.Multer.File[];
