@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { CardBase } from "../components/Card";
 import axios from "axios";
-
+import { UploadAssignment } from "./UploadAssignment";
 interface StatItem{
     label: string;
     value: number;
@@ -97,6 +97,10 @@ export const StudentDashboard = () => {
             </CardBase>
           ))}
         </div>
+      </div>
+
+      <div>
+        <UploadAssignment/>
       </div>
     </div>
   );
