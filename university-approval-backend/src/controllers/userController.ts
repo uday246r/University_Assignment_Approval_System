@@ -224,7 +224,7 @@ export const uploadAssignment = async (req: Request, res: Response) => {
         category: typeof category === "string" ? category : null,
         studentId,
         fileUrl,
-        status: AssignmentStatus.SUBMITTED,
+        status: AssignmentStatus.UNDER_REVIEW,
         submittedAt: new Date(),
       },
     });

@@ -2,6 +2,7 @@ import multer from "multer";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import cloudinary from "./cloudinary";
 import { Request } from "express";
+import { format } from "path";
 
 const fileFilter = (req: Request, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   if (file.mimetype === "application/pdf") {
@@ -16,9 +17,10 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: async (req, file) => {
     return {
-      folder: "assignments",      
-      resource_type: "raw",  
-      allowed_formats: ["pdf"],     
+      // folder: "assignments",      
+      resource_type: "raw",
+      format: "pdf",
+      // allowed_formats: ["pdf"],     
     };
   },
 });
