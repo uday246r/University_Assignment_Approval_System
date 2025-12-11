@@ -6,9 +6,15 @@ interface BaseCardProps {
   children: React.ReactNode;
   className?: string;
   variant: CardVariant;
+  onClick?: React.MouseEventHandler<HTMLDivElement>
 }
 
-export const CardBase = ({ children, variant, className = "" }: BaseCardProps) => {
+export const CardBase = ({ 
+  children, 
+  variant, 
+  className = "" ,
+  onClick,
+}: BaseCardProps) => {
   const styles: Record<CardVariant, string> = {
     card: "rounded-lg border bg-white shadow p-4",
     header: "pb-2 flex flex-col",
@@ -17,7 +23,10 @@ export const CardBase = ({ children, variant, className = "" }: BaseCardProps) =
   };
 
   return (
-    <div className={`${styles[variant]} ${className}`}>
+    <div 
+    className={`${styles[variant]} ${className}`}
+    onClick={onClick}
+    >
       {children}
     </div>
   );

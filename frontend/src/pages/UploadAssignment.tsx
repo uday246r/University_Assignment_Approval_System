@@ -13,6 +13,21 @@ export const UploadAssignment = () =>{
   const [selectedProfessorId, setSelectedProfessorId] = useState("");
   const [loading, setLoading] = useState(false);
 
+  useEffect(()=>{
+    const fetchFacultyDetails = async() =>{
+    const token = localStorage.getItem("token");
+const res = await axios.get(`${VITE_API_BASE}/api/user/admin`,{
+    headers:{
+                Authorization: token ? `Bearer ${token}` : ""
+            },
+        })
+            // console.log("Professor Details: ", res.data);
+            const onlyProfessor = res.data.users.filter((u:any)=>u.role==="PROFESSOR");
+            setProffessorDetails(onlyProfessor);
+    }
+    fetchFacultyDetails();
+},[]);
+
     const handleFileChange = (e : React.ChangeEvent<HTMLInputElement>) =>{
         if(e.target.files && e.target.files.length > 0){
             setFile(e.target.files[0]);
@@ -42,23 +57,10 @@ const handleUpload = async() => {
         formData.append("professorId", selectedProfessorId);
         formData.append("file", file);
 
-useEffect(()=>{
-    const fetchFacultyDetails = async() =>{
-    const token = localStorage.getItem("token");
-const res = await axios.get(`${VITE_API_BASE}/api/professor/details`,{
-    headers:{
-                Authorization: token ? `Bearer ${token}` : ""
-            },
-        })
-            console.log("Professor Details: ", res.data);
-            setProffessorDetails(res.data);
-    }
-    fetchFacultyDetails();
-},[]);
 
     try{
         const token = localStorage.getItem("token");
-        const res = await axios.post(`${VITE_API_BASE}/api/student/upload/Assignment`,formData,{
+        const res = await axios.post(`${VITE_API_BASE}/api/user/student/upload/Assignment`,formData,{
             headers:{
                 "Content-Type": "multipart/form-data",
                 Authorization: token ? `Bearer ${token}` : ""
@@ -98,7 +100,7 @@ const res = await axios.get(`${VITE_API_BASE}/api/professor/details`,{
 
         {professorDetails.length > 0 ? (
           professorDetails.map((prof: any) => (
-            <option key={prof._id} value={prof._id}>
+            <option key={prof.id} value={prof.id}>
               {prof.name}
             </option>
           ))

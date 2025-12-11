@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { CardBase } from "../components/Card";
+import { CardBase } from "../components/Card"
 import axios from "axios";
-import { UploadAssignment } from "./UploadAssignment";
+import { CreateUser } from "./CreateUser";
+
 interface StatItem{
     label: string;
     value: number;
@@ -9,70 +10,59 @@ interface StatItem{
     accent: string;
 }
 
-export const StudentDashboard = () => {
+export const AdminDashboard = () =>{
     const [stats, setStats] = useState<StatItem[]>([]);
     const API_BASE = import.meta.env.VITE_API_BASE;
 
-   useEffect(()=>{
-    const fetchStats = async() =>{
+    useEffect(() =>{
         try{
-            const token = localStorage.getItem("token");
+        const fetchData = async() =>{
+           const token = localStorage.getItem("token");
 
-            const res = await axios.get(`${API_BASE}/api/user/student/dashboard`, {
+            const res = await axios.get(`${API_BASE }/api/admin/dashboard`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
             });
-            const data = res.data.data;
-
+            const data = res.data.data;  
+            
             const organisedData: StatItem[] = [
                 {
-                    label: "Total Assignments",
-                    value: data.totalAssignments,
-                    description: "All assignments assigned to you",
+                    label: "Total Departments",
+                    value: data.totalDepartments,
+                    description: "All Departments",
                     accent: "text-indigo-600",
                 },
                 {
-            label: "Submitted",
-            value: data.assignmentsStatusCount.submittedAssignments,
-            description: "Assignments already submitted",
+            label: "Total Users",
+            value: data.totalUsers,
+            description: "TotalUsers",
             accent: "text-emerald-600",
-          },
-          {
-            label: "Drafts",
-            value: data.assignmentsStatusCount.draftAssignments,
-            description: "Work saved but not yet sent",
-            accent: "text-amber-600",
-          },
-          {
-            label: "Pending Review",
-            value: data.assignmentsStatusCount.underReviewAssignments,
-            description: "Awaiting approval from faculty",
-            accent: "text-rose-600",
           },
             ]
 
          setStats(organisedData);
-
-        } catch(err){
-            console.error("Error fetching dashboard", err);
+         
         }
-    };
-    fetchStats();
-    },[]);
-  return (
-    <div className="min-h-screen bg-slate-100 px-4 py-10">
+        fetchData();
+    }
+    catch(err){
+            console.error("Error fetching admin dashboard", err);
+    }
+    },[])
+
+    return(
+        <div className="min-h-screen bg-slate-100 px-4 py-10">
       <div className="mx-auto max-w-5xl space-y-8">
         <div>
           <h1 className="text-3xl font-semibold text-slate-900">
-            Student Dashboard
+            Admin Dashboard
           </h1>
           <p className="text-slate-600">
-            Keep track of your assignment progress in one glance.
+            Keep track of progress in one glance.
           </p>
         </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+ <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {stats.map((stat) => (
             <CardBase
               key={stat.label}
@@ -94,14 +84,16 @@ export const StudentDashboard = () => {
                 </p>
                 <p className="text-sm text-slate-500">{stat.description}</p>
               </CardBase>
-            </CardBase>
+            </CardBase>            
           ))}
         </div>
-      </div>
+    
+        </div>
 
-      <div>
-        <UploadAssignment/>
-      </div>
-    </div>
-  );
-};
+        <div>
+                <CreateUser/>
+              </div>
+
+        </div>
+    )
+} 
