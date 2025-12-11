@@ -15,9 +15,25 @@ interface CreateUserBody {
 }
 
 export const createUser = async(req: Request<{}, {}, CreateUserBody>, res: Response) => {
-        const { email, name, password, departmentId, role } = req.body;
-try{
-        const existingUser = await prisma.user.findUnique({ where: { email }});
+ try{
+   if (!req.body) {
+      return res.status(400).json({ message: "Request body is missing" });
+    }
+      let { email, name, password, departmentId, role } = req.body;
+
+   if (!email || !name || !password || !departmentId || !role) {
+      return res.status(400).json({
+        message: "All fields are required",
+      });
+    }
+    role = role.toUpperCase() as Role;
+      if (!Object.values(Role).includes(role)) {
+      return res.status(400).json({
+        message: "Invalid role",
+      });
+    }    
+    
+    const existingUser = await prisma.user.findUnique({ where: { email }});
         if(existingUser) return res.status(400).json({message : "User already exists"});
         
         const hashedPassword = await bcrypt.hash(password,10);
@@ -90,7 +106,7 @@ export const findAllUser = async(req:Request, res:Response) =>{
             currentPage: page,
             totalPages: Math.ceil(totalUsers / limit),
             totalUsers,
-            departments: formattedUsers,
+            users: formattedUsers,
         })
 
     } catch(err){
@@ -202,16 +218,15 @@ export const studentDashboard = async(req: Request, res: Response) => {
 
 export const uploadAssignment = async (req: Request, res: Response) => {
   try {
-    
     if (!req.file || !req.file.path) {
       return res.status(400).json({ message: "Please upload a valid PDF file." });
     }
 
     const fileUrl = req.file.path;    
-    const { title, description, category, studentId } = req.body;
+    const { title, description, category, studentId, professorId } = req.body;
 
     
-    if (!title || !studentId) {
+    if (!title || !studentId || !professorId) {
       return res.status(400).json({
         message: "Title and studentId are required fields.",
       });
@@ -223,6 +238,7 @@ export const uploadAssignment = async (req: Request, res: Response) => {
         description: description || null,
         category: typeof category === "string" ? category : null,
         studentId,
+         professorId,
         fileUrl,
         status: AssignmentStatus.UNDER_REVIEW,
         submittedAt: new Date(),
@@ -286,3 +302,82 @@ export const bulkUploadAssignment = async (req: Request, res: Response) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+interface AuthRequest extends Request {
+  user?: {
+    userId: string;
+    // role: string;
+  };
+}
+
+export const professorDashboard = async(req: AuthRequest, res: Response) => {
+  try{
+    const professorID = req.user?.userId;
+
+     const assignments = await prisma.assignment.findMany({
+      where: {
+  professorId: professorID,
+},
+      include: {
+        student: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+        const totalAssignments = assignments.length;
+        const grouped = await prisma.assignment.groupBy({
+            by: ["status"],
+            where: {
+    professorId: professorID,  
+  },
+            _count: { _all: true },
+        });
+
+        const statusCounts: Record<string, number> = {
+            SUBMITTED: 0,
+            UNDER_REVIEW: 0,
+            APPROVED_BY_HOD: 0,
+            REJECTED: 0,
+            RESUBMIT: 0,
+        };
+
+        grouped.forEach((g) => {
+            statusCounts[g.status] = g._count._all;
+        });
+
+        const studentAssignments = assignments.map((item)=>({
+          studentId: item.student.id,
+          studentName: item.student.name,
+          studentEmail: item.student.email,
+          assignmentStatus: item.status,
+          assignmentId: item.id,
+          title: item.title,
+          description: item.description,
+          fileUrl: item.fileUrl,
+          category: item.category,
+          submissionDate: new Date(item.createdAt).toISOString().split("T")[0].split("-").reverse().join("-")
+        }))
+
+        const data = {
+            totalAssignments,
+            assignmentsStatusCount:{
+            submittedAssignments: statusCounts.SUBMITTED,
+            approvedByHODAssignments: statusCounts.APPROVED_BY_HOD,
+            rejectedAssignments: statusCounts.REJECTED,
+            underReviewAssignments: statusCounts.UNDER_REVIEW,
+            reSubmitAssignments: statusCounts.RESUBMIT,
+            },
+            studentAssignments
+        };
+
+        res.status(200).json({ message: "Professor dashboard fetch successfully", data });
+   
+  } catch(err){
+     console.log("Error in fetching professor dashboard", err);
+    return res.status(500).json({ message: "Server error" });
+  }
+}

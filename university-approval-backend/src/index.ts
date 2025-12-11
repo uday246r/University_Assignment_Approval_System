@@ -23,7 +23,7 @@ app.use(express.json());
 app.use("/api/auth", authRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/department", departmentRoutes);
-app.use("/api/student", userRoutes);
+app.use("/api/user", userRoutes);
 
 app.get("/", async(req, res) => {
   const users = await prisma.user.findMany();
