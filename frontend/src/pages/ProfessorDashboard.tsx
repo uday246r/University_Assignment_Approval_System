@@ -19,6 +19,7 @@ interface StudentAssignment {
   description: string;
   fileUrl: string;
   submissionDate: string;
+  status: string;
 }
 export const ProfessorDashboard = () => {
     const [studentAssignmentData, setStudentAssignmentData] = useState<StudentAssignment[]>([]);
@@ -58,12 +59,28 @@ export const ProfessorDashboard = () => {
     fetchStats();
     },[]);
 
-    const approveAssignment = () =>{
+    const approveOrRejectAssignment = async (assignmentId,status) =>{
+      const API_BASE = import.meta.env.VITE_API_BASE;
+      try{
+        const token = localStorage.getItem("token");
+        const res = await axios.post(`${API_BASE}/api/user/professor/approveAssignment`,
+          {
+            assignmentId,
+            status,
+          },
+        {
+          headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        })
+        console.log("here is asssssssssss.......", res);
+        alert(res.data.message);
+        // setCommentData(res.data.updatedData.status);
+        window.location.reload();
+      } catch(err){
+        console.log(err);
 
-    }
-
-    const rejectAssignment = () =>{
-
+      }
     }
 
   return (
@@ -117,6 +134,7 @@ export const ProfessorDashboard = () => {
       <th className="border border-black p-2">File Url</th>
       <th className="border border-black p-2">Submission Date</th>
       <th className="border border-black p-2">Comments</th>
+       <th className="border border-black p-2">HOD Comments</th>
             </tr>
           </thead>
           <tbody>
@@ -131,19 +149,49 @@ export const ProfessorDashboard = () => {
       <td className="border border-black p-2">{item.fileUrl}</td>
       <td className="border border-black p-2">{item.submissionDate}</td>
       <td className="border border-black p-2">
-        <div className="flex gap-2">
+   { 
+   item.assignmentStatus==="UNDER_REVIEW" ? (
+   <div className="flex gap-2">
     <button 
-    onClick = {approveAssignment}
+    onClick = {()=>approveOrRejectAssignment(item.assignmentId,"APPROVED_BY_PROFESSOR")}
     className="bg-green-500 text-white px-3 py-1 rounded-md hover:bg-green-600 transition">
       Approve
     </button>
     <button 
-    onClick = {rejectAssignment}
+    onClick = {()=>approveOrRejectAssignment(item.assignmentId,"REJECTED")}
     className="bg-red-500 text-white px-3 py-1 rounded-md hover:bg-red-600 transition">
       Reject
     </button>
   </div>
+  ) : ( <span
+    className={`px-3 py-1 rounded-md text-sm font-semibold
+      ${
+        item.assignmentStatus === "APPROVED_BY_PROFESSOR"
+          ? "bg-green-100 text-green-600"
+          : "bg-red-200 text-red-600"
+      }`}
+  >
+    {item.assignmentStatus.split("_")[0]}
+  </span>
+  )
+}
         </td>
+
+        <td className="border border-black p-2 text-center">
+  <span
+    className={`px-3 py-1 rounded-md text-sm font-semibold
+      ${
+        item.status === "APPROVED_BY_HOD"
+          ? "bg-red-200 text-red-600"
+          : "bg-red-200 text-red-600"
+      }`}
+  >
+    {item.status === "APPROVED_BY_HOD"
+      ? "Approved"
+      : "Pending"}
+  </span>
+</td>
+
                 </tr>
               ))
             } 
