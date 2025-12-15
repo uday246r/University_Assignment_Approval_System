@@ -381,3 +381,22 @@ export const professorDashboard = async(req: AuthRequest, res: Response) => {
     return res.status(500).json({ message: "Server error" });
   }
 }
+
+
+export const approvedByProffAssignments = async(req: Request, res: Response) =>{
+  try{
+    const {assignmentId, status} = req.body;
+
+    const updatedData = await prisma.assignment.update({
+      where: {id: assignmentId},
+      data: {status}
+    })
+    res.status(200).json({
+      message :"Assignment status updated",
+      updatedData
+    })
+
+  } catch(err){
+    res.status(500).json({ message: "Error updating status" });
+  }
+}
